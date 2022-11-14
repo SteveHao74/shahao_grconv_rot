@@ -1,0 +1,16 @@
+.idea
+__pycache__
+tensorboard
+output
+jaq_save
+models
+
+/data
+npy
+npy1
+npy2
+npy3
+save
+*.pyc
+
+/.python-version
