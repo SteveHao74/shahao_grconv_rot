@@ -165,163 +165,38 @@ def find_grasp(img_array,width,plot=False):
         q_img, width_img = post_process_output(pos_output, width_output)
         print(4)
         gs = evaluation.get_best_grasp(q_img,
-                                       no_grasps=1,
+                                       no_grasps=20,
                                        grasp_width=width_img,
                                        zoom_factor=torch.tensor([1])
              
                                )
         print(gs)
     if gs == []:
-        return  [None,None,None,None,None,None] 
-    g = gs[0]
-    print(g.center,g.angle,g.length,g.width)
-    # g.length = width
-    # index = 12-int((90-g.angle*180/np.pi)/15)
-    index = 18-math.ceil((90-g.angle*180/np.pi)/10)
-    print("index:",index)
-    gr = g.as_gr
-    # print("gr.points",gr.points)
-    if plot:
-        plt.figure(5)
-        plt_img = depth_img.copy()
-        plt.imshow(plt_img, alpha=0.8)
-        cv2.circle(plt_img, (g.center[1], g.center[0]), 2, (0, 0, 255))
+        return  [[None,None,None,None,None,None]] 
+    # import pdb;pdb.set_trace()
+    grasp_array =  []
+    for i in range(len(gs)):
+        g = gs[i]
+        print(g.center,g.angle,g.length,g.width)
+        # g.length = width
+        # index = 12-int((90-g.angle*180/np.pi)/15)
+        index = 18-math.ceil((90-g.angle*180/np.pi)/10)
+        print("index:",index)
+        gr = g.as_gr
 
-        cv2.line(plt_img, (int((gr.points[2][1] + gr.points[1][1]) * 0.5), int((gr.points[2][0] + gr.points[1][0]) * 0.5)),
-                 (int((gr.points[0][1] + gr.points[3][1]) * 0.5), int((gr.points[0][0] + gr.points[3][0]) * 0.5)),
-                 (255, 0, 0), 2)
-        cv2.line(plt_img, (int(gr.points[1][1]), int(gr.points[1][0])), (int(gr.points[2][1]), int(gr.points[2][0])),
-                 (255, 0, 0), 2)
-        cv2.line(plt_img, (int(gr.points[0][1]), int(gr.points[0][0])), (int(gr.points[3][1]), int(gr.points[3][0])),
-                 (255, 0, 0), 2)
-        plt.imshow(plt_img, alpha=0.8)
-        plt.show()
+        p0 = np.array([int((gr.points[2][1] + gr.points[1][1]) * 0.5), int((gr.points[2][0] + gr.points[1][0]) * 0.5)])
+        p1 = np.array([int((gr.points[0][1] + gr.points[3][1]) * 0.5), int((gr.points[0][0] + gr.points[3][0]) * 0.5)])
+        print(p0,p1)
+        region = 3
+        d2 = np.mean(img_array[p0[1]-region:p0[1]+region,p0[0]-region:p0[0]+region]) - 0.006
+        d3 = np.mean(img_array[p1[1]-region:p1[1]+region,p1[0]-region:p1[0]+region]) - 0.006
+        print(d2,d3)
+        grasp_depth = min(d2,d3)
 
-    # plt_img = normalize_depth.copy()
-    # plt.imshow(plt_img)
-    # plt.show()
-    # p0[u,v]
-    p0 = np.array([int((gr.points[2][1] + gr.points[1][1]) * 0.5), int((gr.points[2][0] + gr.points[1][0]) * 0.5)])
-    p1 = np.array([int((gr.points[0][1] + gr.points[3][1]) * 0.5), int((gr.points[0][0] + gr.points[3][0]) * 0.5)])
-    print(p0,p1)
-    region = 3
-    d2 = np.mean(img_array[p0[1]-region:p0[1]+region,p0[0]-region:p0[0]+region]) - 0.006
-    d3 = np.mean(img_array[p1[1]-region:p1[1]+region,p1[0]-region:p1[0]+region]) - 0.006
-    print(d2,d3)
-    grasp_depth = min(d2,d3)
+        print([p0,p1,grasp_depth,grasp_depth,g.angle])
+        grasp_array.append([p0,p1,grasp_depth,grasp_depth,g.angle,q_img[index]])
 
-    # line = myline(p0[0], p0[1], p1[0], p1[1])
-    
-    # total_section = []
-    
-    # for i in range(len(line)):
-    #     try:
-    #         pixel_value = -plt_img[line[i][0], line[i][1]]
-    #     except IndexError:
-    #         break
-    #     total_section.append(pixel_value)
-    
-    # total_section = np.array(total_section)
-    # # np.save('test_section.npy', total_section)
-    # if plot:
-    #     section_plt(total_section)
-    
-    # Sections = []
-    # sub_section = []
-    # cur_flag = 0
-    # count_flag = 0
-    # bais = 12
-    # for i in range(total_section.size):
-    #     if total_section[i] > total_section.max()*0.65:
-    #         if cur_flag == 0:
-    #             cur_flag = 1
-    #             sub_section.append(total_section[i])
-    #             continue
-    #         else:
-    #             sub_section.append(total_section[i])
-    #             continue
-    #     if total_section[i] < total_section.max()*0.65:
-    #         if cur_flag == 0:
-    #             if len(sub_section):
-    #                 if count_flag>=bais or i == total_section.size-1:
-    #                     Sections.append(Section(sub_section, i-count_flag-1))
-    #                     sub_section = []
-    #                     count_flag = 0
-    #                 else:
-    #                     count_flag += 1
-    #                 continue
-    #         else:
-    #             cur_flag = 0
-    #             continue
-    
-    # max_sum = 0
-    # main_Section = Section([], 0)
-    # for i in range(len(Sections)):
-    #     if Sections[i].sum > max_sum:
-    #         max_sum = Sections[i].sum
-    #         main_Section = Sections[i]
-    # if plot:
-    #     section_plt(main_Section.pixel)
-    # p2 = line[max(0, main_Section.start - 10)]
-    # p3 = line[min(len(line) - 1, main_Section.end + 10)]
-    
-    # g.center = line[main_Section.mid-1]
-    # g.length = int(((p2[0] - p3[0]) ** 2 + (p2[1] - p3[1]) ** 2) ** 0.5)
-    # # avail_length.append(g.length)
-    # g.width = int(g.length / 4)
-    
-    #
-    # if plot:
-    #     plt_img = depth_img.copy()
-    #     plt.imshow(plt_img, alpha=0.8)
-    #     cv2.circle(plt_img, (g.center[1], g.center[0]), 2, (0, 0, 255))
-    #     gr = g.as_gr
-    #     cv2.line(plt_img, (int((gr.points[2][1] + gr.points[1][1]) * 0.5), int((gr.points[2][0] + gr.points[1][0]) * 0.5)),
-    #              (int((gr.points[0][1] + gr.points[3][1]) * 0.5), int((gr.points[0][0] + gr.points[3][0]) * 0.5)),
-    #              (255, 0, 0), 2)
-    #     cv2.line(plt_img, (int(gr.points[1][1]), int(gr.points[1][0])), (int(gr.points[2][1]), int(gr.points[2][0])),
-    #              (255, 0, 0), 2)
-    #     cv2.line(plt_img, (int(gr.points[0][1]), int(gr.points[0][0])), (int(gr.points[3][1]), int(gr.points[3][0])),
-    #              (255, 0, 0), 2)
-    #     plt.imshow(plt_img, alpha=0.8)
-    #     plt.show()
-    #
-    #
-    # # for i in range(main_Section.start, main_Section.end, 1jaq):
-    # #     if img_array[line[i][0], line[i][1]] < grasp_depth:
-    # #         grasp_depth = img_array[line[i][0], line[i][1]]
-    # average_depth = 0
-    # for i in range(main_Section.start, main_Section.end, 1):
-    #     average_depth +=  img_array[line[i][0], line[i][1]]
-    # average_depth = average_depth / (main_Section.end - main_Section.start)
-    # d0 = average_depth
-    # d1 = d0
-    # region = 3
-    # d2 = np.mean(img_array[p2[0]-region:p2[0]+region,p2[1]-region:p2[1]+region]) - 0.006
-    # d3 = np.mean(img_array[p3[0]-region:p3[0]+region,p3[1]-region:p3[1]+region]) - 0.006
-    #
-    # dmin = d0 + 0.03
-    #
-    # print(dmin)
-    # print(min(dmin,d2))
-    # print(min(dmin,d3))
-    # grasp_depth = min(min(dmin,d2),min(dmin,d3))
-    # print(avail_length)
-    # # print(max(avail_length))
-    # # return np.array([p2[::-1], p3[::-1], grasp_depth, grasp_depth, [g.length, max(avail_length)]])
-
-    # ggcnn_end = time.time()
-    # process_time = ggcnn_end - ggcnn_start
-    # cal_time.append(process_time)
-    # print('ggcnn process time = {}'.format(process_time))
-    # if len(cal_time)>1:
-    #     print('average time = {}'.format(np.sum(np.array(cal_time)[1:])/(len(cal_time)-1)))
-
-    # return np.array([p0,p1,grasp_depth,grasp_depth,g.length])
-    print([p0,p1,grasp_depth,grasp_depth,g.angle])
-    return np.array([p0,p1,grasp_depth,grasp_depth,g.angle,q_img[index]])
-
-
+    return grasp_array
 
 
 @Pyro4.expose

@@ -658,7 +658,7 @@ def detect_grasps_rot(q_img, width_img=None, no_grasps=1,zoom_factor=1):
         else:
             local_max.append([0,0])
             local_max_q.append(0)
-
+    import pdb;pdb.set_trace()
     index_max = local_max_q.index(max(local_max_q))
     grasp_angle = -math.pi/2 + index_max* math.pi/step
 
@@ -678,6 +678,52 @@ def detect_grasps_rot(q_img, width_img=None, no_grasps=1,zoom_factor=1):
         g = Grasp(grasp_point, grasp_angle)
         if width_img is not None:
             g.length = width_img[index_max][grasp_point]
+        #     # print(zoom_factor)
+        #     # g.length = 80*zoom_factor.item()
+        # else:
+            g.length = 80*zoom_factor.item()
+            g.width = g.length/2
+
+        grasps.append(g)
+
+    return grasps
+
+
+##找到跨越角度图的全局最优抓取配置的list
+def detect_grasps_rot_across_angles(q_img, width_img=None, no_grasps=1,zoom_factor=1):
+    """
+    Detect grasps in a GG-CNN output.
+    :param q_img: Q image network output
+    :param ang_img: Angle image network output
+    :param width_img: (optional) Width image network output
+    :param no_grasps: Max number of grasps to return
+    :return: list of Grasps
+    """
+
+    local_max = []
+    local_max_q = []
+    step = 18
+
+    #方式一，局部放松最优
+    grasp_point_index_list = peak_local_max(q_img, min_distance=1, threshold_abs=0.0, num_peaks=no_grasps)
+
+    # ##方式二，严格全局最优
+    # index = np.argsort(q_img.ravel())[-no_grasps:]
+    # pos = np.unravel_index(index, q_img.shape)
+    # grasp_point_index_list = np.column_stack(pos) 
+
+    grasps = []
+    for grasp_point_index in grasp_point_index_list:
+        rot_step = grasp_point_index[0]
+        grasp_angle = (-math.pi/2 + rot_step* math.pi/step)
+        R_matrix = np.array([[np.cos(-grasp_angle),np.sin(-grasp_angle)],[np.sin(grasp_angle),np.cos(-grasp_angle)]])
+        rot_normalized_point = grasp_point_index[-2:]
+        origin_point = R_matrix.dot(rot_normalized_point - 150)+150
+        grasp_point = tuple(origin_point)
+
+        g = Grasp(grasp_point, grasp_angle)
+        if width_img is not None:
+            g.length = width_img[rot_step][tuple(rot_normalized_point)]
         #     # print(zoom_factor)
         #     # g.length = 80*zoom_factor.item()
         # else:

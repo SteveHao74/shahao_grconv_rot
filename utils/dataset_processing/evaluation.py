@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .grasp import GraspRectangles, detect_grasps ,detect_grasps_rot
+from .grasp import GraspRectangles, detect_grasps ,detect_grasps_rot,detect_grasps_rot_across_angles
 
 
 def plot_output(rgb_img, depth_img, grasp_q_img, grasp_angle_img, no_grasps=1, grasp_width_img=None):
@@ -93,5 +93,6 @@ def calculate_iou_match_rot(grasp_q, ground_truth_bbs, no_grasps=1, grasp_width=
         return False,gs
 
 def get_best_grasp(grasp_q, no_grasps=1,  grasp_width=None, zoom_factor=1):
-    gs = detect_grasps_rot(grasp_q, width_img=grasp_width, no_grasps=no_grasps, zoom_factor=zoom_factor)
+    gs = detect_grasps_rot_across_angles(grasp_q, width_img=grasp_width, no_grasps=no_grasps, zoom_factor=zoom_factor)
+    # gs = detect_grasps_rot(grasp_q, width_img=grasp_width, no_grasps=no_grasps, zoom_factor=zoom_factor)
     return gs
