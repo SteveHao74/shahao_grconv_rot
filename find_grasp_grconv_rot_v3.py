@@ -165,7 +165,7 @@ def find_grasp(img_array,width,plot=False):
         q_img, width_img = post_process_output(pos_output, width_output)
         print(4)
         gs = evaluation.get_best_grasp(q_img,
-                                       no_grasps=20,
+                                       no_grasps=1,
                                        grasp_width=width_img,
                                        zoom_factor=torch.tensor([1])
              
@@ -196,7 +196,7 @@ def find_grasp(img_array,width,plot=False):
         print([p0,p1,grasp_depth,grasp_depth,g.angle])
         grasp_array.append([p0,p1,grasp_depth,grasp_depth,g.angle,q_img[index]])
 
-    return grasp_array
+    return grasp_array[0]
 
 
 @Pyro4.expose

@@ -723,11 +723,11 @@ def detect_grasps_rot_across_angles(q_img, width_img=None, no_grasps=1,zoom_fact
 
         g = Grasp(grasp_point, grasp_angle)
         if width_img is not None:
-            g.length = width_img[rot_step][tuple(rot_normalized_point)]
+            g.length = width_img[rot_step][tuple(rot_normalized_point)]#/1.5
         #     # print(zoom_factor)
         #     # g.length = 80*zoom_factor.item()
         # else:
-            g.length = 80*zoom_factor.item()
+            # g.length = 80*zoom_factor.item()
             g.width = g.length/2
 
         grasps.append(g)
